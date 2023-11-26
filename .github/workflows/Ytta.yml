@@ -94,6 +94,12 @@ jobs:
           ls upload
           if [ $(ls -l Frost_${{ steps.config.outputs.repack_name }} | awk '{print $5}') -gt 2147483647 ]; then tar cvzpf - Frost_${{ steps.config.outputs.repack_name }} | split -d -b 1024m - upload/Frost_${{steps.config.outputs.repack_name }}; else mv Frost_${{ steps.config.outputs.repack_name }} upload/Frost_${{ steps.config.outputs.repack_name }}; fi
 
+      - name: Setup SSH
+        uses: fastai/workflows/ssh@master
+        with:
+          ssh_key: ${{ secrets.SSH_KEY }}
+          key_file: id_ecdsa
+          
       - name: Telegram Notify 2/3
         if: ${{ steps.config.outputs.tg_chat_ids != 0 }}
         run: |
