@@ -7,6 +7,9 @@ USERNAME= user sourceforge
 PASSWORD= password sourceforge
 ```
 ```
+SSH_KEY= ur key
+```
+```
 TG_BOT_TOKEN= token bot
 ```
 ```
