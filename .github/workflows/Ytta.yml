@@ -121,12 +121,6 @@ jobs:
       - name: Save Release Info to Environment File
         run: echo "RELEASE_ID=${{ steps.release_info.outputs.release_id }}" >> $GITHUB_ENV
 
-      - name: Setup SSH
-        uses: fastai/workflows/ssh@master
-        with:
-          ssh_key: ${{ secrets.SSH_KEY }}
-          key_file: id_ecdsa
-
       - name: Upload to sourceforge
         if: ${{ steps.config.outputs.sourceforge == 'yes' }}
         run: |
