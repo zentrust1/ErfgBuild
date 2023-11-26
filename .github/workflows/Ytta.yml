@@ -1,0 +1,169 @@
+name: GSI-BUILD-07
+
+on:
+  workflow_dispatch:
+  watch:
+   types: [started]
+
+defaults:
+  run:
+   shell: bash
+  
+jobs:
+  GSI:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: conload
+        uses: falti/dotenv-action@v1.0.4
+        id: config
+        with:
+          path: config.env
+
+      - name: Get variables
+        run: |
+          echo "BUILD_TIME=$(date +%s | md5sum | awk '{print substr($1,1,10)}')" >> $GITHUB_ENV
+          echo "BUILD_sTIME=$(TZ=Asia/Jakarta date -d @$(date +%s) +'%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_ENV
+      
+      - name: Configuration Environment
+        run: |
+          sudo apt install -y git wget git gzip unzip curl axel aria2 zstd rename p7zip-full pigz
+      
+      - name: Get the ErfanGSI tool
+        uses: actions/checkout@main
+        with:
+          repository: Frostleaft07/GxExTxF
+          path: ErfanGSIs
+
+      - name: 777 permissions
+        run: |
+          sudo chmod 777 -R $GITHUB_WORKSPACE/ErfanGSIs
+      
+      - name: Fix unexpected exit
+        run: |
+              sed -i 's/\|\| exit 1//g' ErfanGSIs/url2GSI.sh
+              sed -i 's/exit 1//g' ErfanGSIs/url2GSI.sh
+              
+      - name: Create and configure the environment required for the ErfanGSI tool
+        run: |
+          sudo sed -i 's/USE_MIRROR_FOR_PIP\=true/USE_MIRROR_FOR_PIP\=false/' $GITHUB_WORKSPACE/ErfanGSIs/setup.sh
+          sudo bash $GITHUB_WORKSPACE/ErfanGSIs/setup.sh
+          pip3 install aligo
+         # sudo apt-get -y --purge remove "adoptopenjdk-11-hotspot"
+         # java -version
+
+      - name: Telegram Notify 1/3
+        if: ${{ steps.config.outputs.tg_chat_ids != 0 }}
+        run: |
+          BOT_TOKEN="${{ secrets.TG_BOT_TOKEN }}"
+          CHAT_IDS="${{ steps.config.outputs.tg_chat_ids }}"
+          TG_URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
+
+          chatids=("$CHAT_IDS")
+
+          for chat in "${chatids[@]}"; do
+              curl -s -d "chat_id=$chat" --data-urlencode "text=Starting build..." "$TG_URL"
+            done
+         
+      - name: Download ROM and make GSI For A
+        if: ${{ steps.config.outputs.build_type == 'a' }}
+        run: |
+          cd ${{ github.workspace }}/ErfanGSIs/
+          # Run the script with the loaded variables
+          sudo bash ./url2GSI.sh --aonly ${{ steps.config.outputs.rom_url }} ${{ steps.config.outputs.os_type }} ${{ steps.config.outputs.build_type }}
+
+      - name: Download ROM and make GSI For A/B
+        if: ${{ steps.config.outputs.build_type == 'ab' }}
+        run: |
+          cd ${{ github.workspace }}/ErfanGSIs/
+          # Run the script with the loaded variables
+          sudo bash ./url2GSI.sh --ab ${{ steps.config.outputs.rom_url }} ${{ steps.config.outputs.os_type }} ${{ steps.config.outputs.build_type }}
+          
+      - name: compression GSI
+        run: |
+          cd $GITHUB_WORKSPACE/ErfanGSIs
+          mkdir infobuild
+          cp $GITHUB_WORKSPACE/ErfanGSIs/output/*txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/
+          cat $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*txt
+          pwd
+          7za a -mmt16 -t7z -r Frost_${{ steps.config.outputs.repack_name }} output/*
+          mkdir upload
+          ls upload
+          if [ $(ls -l Frost_${{ steps.config.outputs.repack_name }} | awk '{print $5}') -gt 2147483647 ]; then tar cvzpf - Frost_${{ steps.config.outputs.repack_name }} | split -d -b 1024m - upload/Frost_${{steps.config.outputs.repack_name }}; else mv Frost_${{ steps.config.outputs.repack_name }} upload/Frost_${{ steps.config.outputs.repack_name }}; fi
+
+      - name: Telegram Notify 2/3
+        if: ${{ steps.config.outputs.tg_chat_ids != 0 }}
+        run: |
+          BOT_TOKEN="${{ secrets.TG_BOT_TOKEN }}"
+          CHAT_IDS="${{ steps.config.outputs.tg_chat_ids }}"
+          TG_URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
+
+          chatids=("$CHAT_IDS")
+
+          for chat in "${chatids[@]}"; do
+              printf "\n\nUpload GSI to GH-Release and Sourceforge...."
+              curl -s -d "chat_id=$chat" --data-urlencode "text=Upload GSI to GH-Release and Sourceforge...." "$TG_URL"
+            done
+
+      - name: upload to release
+        if: ${{ steps.config.outputs.release == 'yes' }}
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: ${{ github.workspace }}/ErfanGSIs/upload/*
+          name: "${{ steps.config.outputs.os_type }}-${{ steps.config.outputs.build_type }}-Android${{ steps.config.outputs.version }}-unpack"
+          tag: "${{ github.config.outputs.repack_name }}_${{ steps.config.outputs.build_type }}-${{ steps.config.outputs.version }}-${{ github.run_number }}"
+          bodyFile: "${{ github.workspace }}/ErfanGSIs/infobuild/build_info.txt"
+          token: ${{ secrets.MY_TOKEN }}
+        
+      - name: Save Release Info to Environment File
+        run: echo "RELEASE_ID=${{ steps.release_info.outputs.release_id }}" >> $GITHUB_ENV
+
+      - name: Setup SSH
+        uses: fastai/workflows/ssh@master
+        with:
+          ssh_key: ${{ secrets.SSH_KEY }}
+          key_file: id_ecdsa
+
+      - name: Upload to sourceforge
+        if: ${{ steps.config.outputs.sourceforge == 'yes' }}
+        run: |
+          sudo apt install sshpass -y
+          ssh-keyscan frs.sourceforge.net >> ~/.ssh/known_hosts
+          sshpass -p "${{ secrets.PASSWORD }}" rsync -arsP -e ssh ${{ github.workspace }}/ErfanGSIs/upload/*.7z "${{ secrets.USERNAME }}@frs.sourceforge.net:${{ steps.config.outputs.sourceforge_dir }}"
+          sshpass -p "${{ secrets.PASSWORD }}" rsync -arsP -e ssh ${{ github.workspace }}/ErfanGSIs/infobuild/build_info.txt "${{ secrets.USERNAME }}@frs.sourceforge.net:${{ steps.config.outputs.sourceforge_dir }}"
+
+      - name: Upload to Transfer.sh
+        if: ${{ steps.config.outputs.transfer_sh == 'yes' }}
+        run: |
+          pip install transfer.sh
+          cd $GITHUB_WORKSPACE/ErfanGSIs/upload/
+          transfer up *.7z
+      
+
+      - name: Telegram Notify 3/3
+        if: ${{ steps.config.outputs.tg_chat_ids != 0 }}
+        run: |
+          BOT_TOKEN="${{ secrets.TG_BOT_TOKEN }}"
+          CHAT_IDS="${{ steps.config.outputs.tg_chat_ids }}"
+          TG_URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
+
+          chatids=("$CHAT_IDS")
+
+          for chat in "${chatids[@]}"; do
+            TYPE="${{ steps.config.outputs.firmware_type }}"
+            OUTPUT="${{ steps.config.outputs.output_type }}"
+            BASE="${{ steps.config.outputs.rom_url }}"
+            SOURCEFORGE="${{ steps.config.outputs.sourceforge_url }}"
+            ROM_NAME_INFO="${{ steps.config.outputs.rom_name_info }}"
+            for file in "${{ github.workspace }}/ErfanGSIs/infobuild/build_info.txt"; do
+              filename=$(basename -- "$file")
+              sed -i "1s/^/Name: ${filename%.*}\n/" "$file"
+              printf "\n\nROM: $ROM_NAME_INFO" >> "$file"
+              printf "\n\nBase Firmware Link: $BASE" >> "$file"
+              printf "\n\nDownload Link: $SOURCEFORGE" >> "$file"
+              curl -s -d "chat_id=$chat" --data-urlencode text@$file "$TG_URL"
+            done
+          done
