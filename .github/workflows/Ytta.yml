@@ -86,9 +86,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/ErfanGSIs
           mkdir infobuild
-          cp $GITHUB_WORKSPACE/ErfanGSIs/output/*txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/
-          cat $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*txt
-          mv $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/readme.txt
+          cp $GITHUB_WORKSPACE/ErfanGSIs/output/*.txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/
+          mv $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*.txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/readme.txt
+          cat $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*.txt
           pwd
           7za a -mmt16 -t7z -r Frost_${{ steps.config.outputs.repack_name }} output/*
           mkdir upload
@@ -121,7 +121,7 @@ jobs:
           artifacts: ${{ github.workspace }}/ErfanGSIs/upload/*
           name: "${{ steps.config.outputs.os_type }}-${{ steps.config.outputs.build_type }}-Android${{ steps.config.outputs.version }}-unpack"
           tag: "${{ github.config.outputs.repack_name }}_${{ steps.config.outputs.build_type }}-${{ steps.config.outputs.version }}-${{ github.run_number }}"
-          bodyFile: "${{ github.workspace }}/ErfanGSIs/infobuild/build_info.txt"
+          bodyFile: "${{ github.workspace }}/ErfanGSIs/infobuild/readme.txt"
           token: ${{ secrets.MY_TOKEN }}
         
       - name: Save Release Info to Environment File
@@ -158,7 +158,7 @@ jobs:
             BASE="${{ steps.config.outputs.rom_url }}"
             SOURCEFORGE="${{ steps.config.outputs.sourceforge_url }}"
             ROM_NAME_INFO="${{ steps.config.outputs.rom_name_info }}"
-            for file in "${{ github.workspace }}/ErfanGSIs/infobuild/*.txt"; do
+            for file in "${{ github.workspace }}/ErfanGSIs/infobuild/readme.txt"; do
               filename=$(basename -- "$file")
               sed -i "1s/^/Name: ${filename%.*}\n/" "$file"
               printf "\n\nROM: $ROM_NAME_INFO" >> "$file"
