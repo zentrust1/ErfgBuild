@@ -133,7 +133,7 @@ jobs:
           sudo apt install sshpass -y
           ssh-keyscan frs.sourceforge.net >> ~/.ssh/known_hosts
           sshpass -p "${{ secrets.PASSWORD }}" rsync -arsP -e ssh ${{ github.workspace }}/ErfanGSIs/upload/*.7z "${{ secrets.USERNAME }}@frs.sourceforge.net:${{ steps.config.outputs.sourceforge_dir }}"
-          sshpass -p "${{ secrets.PASSWORD }}" rsync -arsP -e ssh ${{ github.workspace }}/ErfanGSIs/infobuild/build_info.txt "${{ secrets.USERNAME }}@frs.sourceforge.net:${{ steps.config.outputs.sourceforge_dir }}"
+          sshpass -p "${{ secrets.PASSWORD }}" rsync -arsP -e ssh ${{ github.workspace }}/ErfanGSIs/infobuild/*.txt "${{ secrets.USERNAME }}@frs.sourceforge.net:${{ steps.config.outputs.sourceforge_dir }}"
 
       - name: Upload to Transfer.sh
         if: ${{ steps.config.outputs.transfer_sh == 'yes' }}
