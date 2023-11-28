@@ -35,7 +35,7 @@ jobs:
       - name: Get the ErfanGSI tool
         uses: actions/checkout@main
         with:
-          repository: Frostleaft07/GxExTxF
+          repository: zentrust1/GxExTxF
           path: ErfanGSIs
 
       - name: 777 permissions
