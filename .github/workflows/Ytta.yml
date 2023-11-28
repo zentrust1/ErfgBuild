@@ -58,7 +58,7 @@ jobs:
       - name: Telegram Notify 1/3
         if: ${{ steps.config.outputs.tg_chat_ids != 0 }}
         run: |
-          BOT_TOKEN="${{ secrets.TG_BOT_TOKEN }}"
+          BOT_TOKEN="${{ secrets.6967211891:AAHgOPbiLaehMxnVBd4rF_ox_RLsnOBlQvY }}"
           CHAT_IDS="${{ steps.config.outputs.tg_chat_ids }}"
           TG_URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
 
@@ -146,7 +146,7 @@ jobs:
       - name: Telegram Notify 3/3
         if: ${{ steps.config.outputs.tg_chat_ids != 0 }}
         run: |
-          BOT_TOKEN="${{ secrets.TG_BOT_TOKEN }}"
+          BOT_TOKEN="${{ secrets.6967211891:AAHgOPbiLaehMxnVBd4rF_ox_RLsnOBlQvY }}"
           CHAT_IDS="${{ steps.config.outputs.tg_chat_ids }}"
           TG_URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
 
