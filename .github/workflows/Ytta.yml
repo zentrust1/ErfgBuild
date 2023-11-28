@@ -90,10 +90,10 @@ jobs:
           mv $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*.txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/readme.txt
           cat $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*.txt
           pwd
-          7za a -mmt16 -t7z -r Frost_${{ steps.config.outputs.repack_name }} output/*
+          7za a -mmt16 -t7z -r seikoprjkt_${{ steps.config.outputs.repack_name }} output/*
           mkdir upload
           ls upload
-          if [ $(ls -l Frost_${{ steps.config.outputs.repack_name }} | awk '{print $5}') -gt 2147483647 ]; then tar cvzpf - Frost_${{ steps.config.outputs.repack_name }} | split -d -b 1024m - upload/Frost_${{steps.config.outputs.repack_name }}; else mv Frost_${{ steps.config.outputs.repack_name }} upload/Frost_${{ steps.config.outputs.repack_name }}; fi
+          if [ $(ls -l seikoprjkt_${{ steps.config.outputs.repack_name }} | awk '{print $5}') -gt 2147483647 ]; then tar cvzpf - seikoprjkt_${{ steps.config.outputs.repack_name }} | split -d -b 1024m - upload/seikoprjkt_${{steps.config.outputs.repack_name }}; else mv seikoprjkt_${{ steps.config.outputs.repack_name }} upload/seikoprjkt_${{ steps.config.outputs.repack_name }}; fi
 
       - name: Setup SSH
         uses: fastai/workflows/ssh@master
