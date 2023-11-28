@@ -84,7 +84,7 @@ jobs:
           
       - name: compression GSI
         run: |
-             cd $GITHUB_WORKSPACE/ErfanGSIs
+         cd $GITHUB_WORKSPACE/ErfanGSIs
           mkdir infobuild
           cp $GITHUB_WORKSPACE/ErfanGSIs/output/*.txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/
           mv $GITHUB_WORKSPACE/ErfanGSIs/infobuild/*.txt $GITHUB_WORKSPACE/ErfanGSIs/infobuild/readme.txt
